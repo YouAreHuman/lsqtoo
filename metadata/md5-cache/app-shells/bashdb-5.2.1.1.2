@@ -1,0 +1,12 @@
+DEFINED_PHASES=configure prepare
+DEPEND=>=app-shells/bash-5
+DESCRIPTION=bash source code debugging
+EAPI=7
+HOMEPAGE=http://bashdb.sourceforge.net/
+IUSE=test
+KEYWORDS=amd64 ppc ppc64 x86
+LICENSE=GPL-2
+RESTRICT=!test? ( test )
+SLOT=0
+SRC_URI=https://github.com/rocky/bashdb/archive/refs/heads/bash-5.2.tar.gz test? ( https://dev.gentoo.org/~whissi/dist/bashdb/bashdb-4.4-1.0.0-missing-test-files.tar.xz )
+_md5_=a37ef30d68a4b7d12b18f8ddaf4fd22f
