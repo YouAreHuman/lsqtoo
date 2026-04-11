@@ -1,0 +1,88 @@
+Fix compatibility with gnu-efi >= 4.0.0
+
+gnu-efi 4.0.0+ introduces several breaking ABI changes:
+1. ReallocatePool argument order changed (handled via GNU_EFI_3_0_COMPAT in ebuild)
+2. AsciiStrLen is now provided by gnu-efi (renamed from strlena) - remove duplicate
+3. CompareGuid now has a macro in legacy/efilib.h - remove conflicting macro
+4. CompareGuid return value semantics (handled via GNU_EFI_USE_COMPAREGUID_ABI=0 in ebuild)
+
+References:
+- https://sourceforge.net/p/refind/discussion/general/thread/de16ef94ef/
+- https://github.com/ncroxon/gnu-efi/pull/25/commits/f3656c88007a775562b625a2cfe1bc54c1170bfe
+- https://github.com/ncroxon/gnu-efi/pull/18/commits/ac8d6944c28ddb38bff44b4a5b5072a62682d313
+
+Bug: https://bugs.gentoo.org/944562
+
+--- a/EfiLib/gnuefi-helper.c
++++ b/EfiLib/gnuefi-helper.c
+@@ -93,43 +93,6 @@ UnicodeStrToAsciiStr (
+   return Destination;
+ }
+ 
+-/**
+-  Returns the length of a Null-terminated ASCII string.
+-
+-  This function returns the number of ASCII characters in the Null-terminated
+-  ASCII string specified by String.
+-
+-  If String is NULL, then ASSERT().
+-  If PcdMaximumAsciiStringLength is not zero and String contains more than
+-  PcdMaximumAsciiStringLength ASCII characters not including the Null-terminator,
+-  then ASSERT().
+-
+-  @param  String  Pointer to a Null-terminated ASCII string.
+-
+-  @return The length of String.
+-
+-**/
+-UINTN
+-AsciiStrLen (
+-  IN      CONST CHAR8               *String
+-  )
+-{
+-  UINTN                             Length;
+-
+-  ASSERT (String != NULL);
+-
+-  for (Length = 0; *String != '\0'; String++, Length++) {
+-//     //
+-//     // If PcdMaximumUnicodeStringLength is not zero,
+-//     // length should not more than PcdMaximumUnicodeStringLength
+-//     //
+-//     if (PcdGet32 (PcdMaximumAsciiStringLength) != 0) {
+-//       ASSERT (Length < PcdGet32 (PcdMaximumAsciiStringLength));
+-//     }
+-  }
+-  return Length;
+-}
+-
+ /**
+   Determine whether a given device path is valid.
+   If DevicePath is NULL, then ASSERT().
+--- a/EfiLib/gnuefi-helper.h
++++ b/EfiLib/gnuefi-helper.h
+@@ -38,11 +38,6 @@ UnicodeStrToAsciiStr (
+    OUT      CHAR8               *Destination
+ );
+ 
+-UINTN
+-AsciiStrLen (
+-   IN      CONST CHAR8               *String
+-);
+-
+ UINTN
+ EFIAPI
+ GetDevicePathSize (
+--- a/filesystems/fsw_efi.h
++++ b/filesystems/fsw_efi.h
+@@ -41,10 +41,6 @@
+ #include "fsw_core.h"
+ #include "../include/refit_call_wrapper.h"
+ 
+-#ifdef __MAKEWITH_GNUEFI
+-#define CompareGuid(a, b) CompareGuid(a, b)==0
+-#endif
+-
+ #define REFIND_EFI_DISK_IO_PROTOCOL_GUID \
+   { \
+     0xce345171, 0xba0b, 0x11d2, {0x8e, 0x4f, 0x0, 0xa0, 0xc9, 0x69, 0x72, 0x3b } \
